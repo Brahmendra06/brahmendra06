@@ -1,49 +1,62 @@
 const express = require('express');
+const multer = require('multer');
 const cors = require('cors');
-const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
+const path = require('path');
 
 const app = express();
-const PORT = 5000;
+const port = 3000;
 
-mongoose.connect('mongodb://localhost:27017/movieBooking', { useNewUrlParser: true, useUnifiedTopology: true });
+// Middleware
+app.use(cors()); // Allow cross-origin requests
+app.use(express.json());
+app.use(express.static('uploads')); // Serve uploaded files
 
-const bookingSchema = new mongoose.Schema({
-    movieId: String,
-    theater: String,
-    date: String,
-    time: String,
-    bookedSeats: [Number],
+// Set up storage for uploaded files
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads'); // Folder to store uploaded files
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`); // Rename file to avoid name conflicts
+    }
 });
 
-const Booking = mongoose.model('Booking', bookingSchema);
+const upload = multer({ storage });
 
-app.use(cors());
-app.use(bodyParser.json());
+// Store course files in an object
+const courseFiles = {};
 
-// Get booked seats for a movie
-app.get('/bookings', async (req, res) => {
-    const { movieId, theater, date, time } = req.query;
-    const booking = await Booking.findOne({ movieId, theater, date, time });
-    res.json(booking ? booking.bookedSeats : []);
-});
+// Upload endpoint
+app.post('/upload', upload.single('file'), (req, res) => {
+    const courseName = req.body.courseName;
+    const file = { name: req.file.originalname, url: `/${req.file.filename}` };
 
-// Book seats
-app.post('/book', async (req, res) => {
-    const { movieId, theater, date, time, seats } = req.body;
-    let booking = await Booking.findOne({ movieId, theater, date, time });
-    
-    if (booking) {
-        booking.bookedSeats.push(...seats);
-        await booking.save();
-    } else {
-        booking = new Booking({ movieId, theater, date, time, bookedSeats: seats });
-        await booking.save();
+    if (!courseFiles[courseName]) {
+        courseFiles[courseName] = []; // Initialize array for new course
     }
 
-    res.status(200).send('Seats booked successfully!');
+    courseFiles[courseName].push(file); // Add file to the course
+    res.json({ message: 'File uploaded successfully' });
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+// Fetch courses
+app.get('/courses', (req, res) => {
+    res.json(courseFiles); // Send courseFiles object
+});
+
+// Delete endpoint
+app.delete('/delete', (req, res) => {
+    const { courseName, fileName } = req.body;
+    
+    if (courseFiles[courseName]) {
+        courseFiles[courseName] = courseFiles[courseName].filter(file => file.name !== fileName);
+        res.json({ message: 'File deleted successfully' });
+    } else {
+        res.status(404).json({ message: 'Course not found' });
+    }
+});
+
+// Start server
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
 });
