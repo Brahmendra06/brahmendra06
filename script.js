@@ -8,98 +8,89 @@ let currentMovie = null;
 let selectedSeats = 0;
 let totalPrice = 0;
 
-const seatCountElement = document.getElementById('seatCount');
-const totalPriceElement = document.getElementById('totalPrice');
-const bookingSection = document.getElementById('bookingSection');
-const bookedDetails = document.getElementById('bookedDetails');
-const bookedMovie = document.getElementById('bookedMovie');
-const bookedTheater = document.getElementById('bookedTheater');
-const bookedDate = document.getElementById('bookedDate');
-const bookedTime = document.getElementById('bookedTime');
-const bookedSeats = document.getElementById('bookedSeats');
-const bookedTotalPrice = document.getElementById('bookedTotalPrice');
-const bookingList = document.getElementById('bookingList');
+// Simulated HTML elements as objects
+const elements = {
+    seatCount: { innerText: '0' },
+    totalPrice: { innerText: '0' },
+    bookingSection: { style: { display: 'none' } },
+    bookedDetails: { style: { display: 'none' }, innerText: '' },
+    bookedMovie: { innerText: '' },
+    bookedTheater: { innerText: '' },
+    bookedDate: { innerText: '' },
+    bookedTime: { innerText: '' },
+    bookedSeats: { innerText: '' },
+    bookedTotalPrice: { innerText: '' },
+    bookingList: []
+};
+
+function updateSeatsDisplay() {
+    const bookedSeats = movieData[currentMovie].bookedSeats;
+    console.log(`Booked Seats for Movie ${currentMovie}:`, bookedSeats);
+}
+
+function generateSeats() {
+    const seatSelection = [];
+    for (let i = 1; i <= 50; i++) {
+        seatSelection.push({
+            number: i,
+            selected: false,
+            booked: movieData[currentMovie]?.bookedSeats.includes(i) || false
+        });
+    }
+    return seatSelection;
+}
+
+function selectSeat(seatNumber) {
+    const seat = elements.seatSelection.find(seat => seat.number === seatNumber);
+    if (!seat.booked) {
+        seat.selected = !seat.selected;
+        selectedSeats = seatSelection.filter(seat => seat.selected).length;
+        elements.seatCount.innerText = selectedSeats;
+        totalPrice = selectedSeats * movieData[currentMovie].price;
+        elements.totalPrice.innerText = totalPrice;
+    }
+}
 
 document.querySelectorAll('.movie').forEach(movie => {
     movie.addEventListener('click', () => {
         currentMovie = movie.getAttribute('data-id');
         totalPrice = movieData[currentMovie].price;
-        totalPriceElement.innerText = totalPrice;
-        seatCountElement.innerText = selectedSeats;
-        bookingSection.style.display = 'block';
+        elements.totalPrice.innerText = totalPrice;
+        elements.seatCount.innerText = selectedSeats;
+        elements.bookingSection.style.display = 'block';
         updateSeatsDisplay();
+        elements.seatSelection = generateSeats();
     });
 });
 
-document.getElementById('theaterName').addEventListener('change', updateSeatsDisplay);
-document.getElementById('dateSelection').addEventListener('change', updateSeatsDisplay);
-document.getElementById('timeSelection').addEventListener('change', updateSeatsDisplay);
-
-function generateSeats() {
-    const seatSelection = document.getElementById('seatSelection');
-    for (let i = 1; i <= 50; i++) {
-        const seat = document.createElement('div');
-        seat.className = 'seat';
-        seat.innerText = i;
-        seat.addEventListener('click', () => {
-            if (!seat.classList.contains('booked')) {
-                seat.classList.toggle('selected');
-                selectedSeats = document.querySelectorAll('.seat.selected').length;
-                seatCountElement.innerText = selectedSeats;
-                totalPriceElement.innerText = selectedSeats * totalPrice;
-            }
-        });
-        seatSelection.appendChild(seat);
-    }
-}
-
-function updateSeatsDisplay() {
-    const selectedTheater = document.getElementById('theaterName').value;
-    const selectedDate = document.getElementById('dateSelection').value;
-    const selectedTime = document.getElementById('timeSelection').value;
-    const seatSelection = document.getElementById('seatSelection');
-
-    Array.from(seatSelection.children).forEach(seat => {
-        seat.classList.remove('selected', 'booked');
-    });
-
-    if (currentMovie && selectedTheater && selectedDate && selectedTime) {
-        const bookedSeats = movieData[currentMovie].bookedSeats;
-        bookedSeats.forEach(seatNumber => {
-            const seatElement = seatSelection.querySelector(`div:nth-child(${seatNumber})`);
-            if (seatElement) {
-                seatElement.classList.add('booked');
-            }
-        });
-    }
-}
-
-document.getElementById('confirmButton').addEventListener('click', () => {
-    const bookedSeatsArray = Array.from(document.querySelectorAll('.seat.selected')).map(seat => seat.innerText);
+function confirmBooking() {
+    const bookedSeatsArray = elements.seatSelection.filter(seat => seat.selected).map(seat => seat.number);
     
     if (bookedSeatsArray.length > 0) {
         movieData[currentMovie].bookedSeats.push(...bookedSeatsArray);
-        bookedMovie.innerText = document.querySelector(`.movie[data-id="${currentMovie}"] p`).innerText;
-        bookedTheater.innerText = document.getElementById('theaterName').value;
-        bookedDate.innerText = document.getElementById('dateSelection').value;
-        bookedTime.innerText = document.getElementById('timeSelection').value;
-        bookedSeats.innerText = bookedSeatsArray.join(', ');
-        bookedTotalPrice.innerText = selectedSeats * totalPrice;
-        bookedDetails.style.display = 'block';
+        elements.bookedMovie.innerText = `Movie ${currentMovie}`;
+        elements.bookedTheater.innerText = 'Theater Name';  // Replace with actual theater name
+        elements.bookedDate.innerText = 'Date Selected';  // Replace with actual date
+        elements.bookedTime.innerText = 'Time Selected';  // Replace with actual time
+        elements.bookedSeats.innerText = bookedSeatsArray.join(', ');
+        elements.bookedTotalPrice.innerText = selectedSeats * totalPrice;
+        elements.bookedDetails.style.display = 'block';
 
         // Add to booking list
-        const bookingItem = document.createElement('div');
-        bookingItem.className = 'booking-item';
-        bookingItem.innerHTML = `
-            <p>Movie: ${bookedMovie.innerText}</p>
-            <p>Theater: ${bookedTheater.innerText}</p>
-            <p>Date: ${bookedDate.innerText}</p>
-            <p>Time: ${bookedTime.innerText}</p>
-            <p>Seats: ${bookedSeats.innerText}</p>
-            <p>Total Price: ₹${bookedTotalPrice.innerText}</p>
-        `;
-        bookingList.appendChild(bookingItem);
-    }
-});
+        elements.bookingList.push({
+            movie: elements.bookedMovie.innerText,
+            theater: elements.bookedTheater.innerText,
+            date: elements.bookedDate.innerText,
+            time: elements.bookedTime.innerText,
+            seats: elements.bookedSeats.innerText,
+            totalPrice: elements.bookedTotalPrice.innerText
+        });
 
-generateSeats();
+        console.log('Booking List:', elements.bookingList);
+    }
+}
+
+// Example of selecting a seat
+selectSeat(1); // Simulate selecting seat 1
+selectSeat(2); // Simulate selecting seat 2
+confirmBooking(); // Simulate confirming the booking
