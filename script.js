@@ -1,96 +1,118 @@
-const movieData = {
-    1: { price: 150, bookedSeats: [] },
-    2: { price: 200, bookedSeats: [] },
-    3: { price: 250, bookedSeats: [] }
-};
+const courseFiles = {}; // Object to store files associated with courses
+let isTeacherLoggedIn = false; // Flag to check if the teacher is logged in
 
-let currentMovie = null;
-let selectedSeats = 0;
-let totalPrice = 0;
-
-// Simulated HTML elements as objects
-const elements = {
-    seatCount: { innerText: '0' },
-    totalPrice: { innerText: '0' },
-    bookingSection: { style: { display: 'none' } },
-    bookedDetails: { style: { display: 'none' }, innerText: '' },
-    bookedMovie: { innerText: '' },
-    bookedTheater: { innerText: '' },
-    bookedDate: { innerText: '' },
-    bookedTime: { innerText: '' },
-    bookedSeats: { innerText: '' },
-    bookedTotalPrice: { innerText: '' },
-    bookingList: []
-};
-
-function updateSeatsDisplay() {
-    const bookedSeats = movieData[currentMovie].bookedSeats;
-    console.log(`Booked Seats for Movie ${currentMovie}:`, bookedSeats);
-}
-
-function generateSeats() {
-    const seatSelection = [];
-    for (let i = 1; i <= 50; i++) {
-        seatSelection.push({
-            number: i,
-            selected: false,
-            booked: movieData[currentMovie]?.bookedSeats.includes(i) || false
-        });
-    }
-    return seatSelection;
-}
-
-function selectSeat(seatNumber) {
-    const seat = elements.seatSelection.find(seat => seat.number === seatNumber);
-    if (!seat.booked) {
-        seat.selected = !seat.selected;
-        selectedSeats = seatSelection.filter(seat => seat.selected).length;
-        elements.seatCount.innerText = selectedSeats;
-        totalPrice = selectedSeats * movieData[currentMovie].price;
-        elements.totalPrice.innerText = totalPrice;
-    }
-}
-
-document.querySelectorAll('.movie').forEach(movie => {
-    movie.addEventListener('click', () => {
-        currentMovie = movie.getAttribute('data-id');
-        totalPrice = movieData[currentMovie].price;
-        elements.totalPrice.innerText = totalPrice;
-        elements.seatCount.innerText = selectedSeats;
-        elements.bookingSection.style.display = 'block';
-        updateSeatsDisplay();
-        elements.seatSelection = generateSeats();
-    });
-});
-
-function confirmBooking() {
-    const bookedSeatsArray = elements.seatSelection.filter(seat => seat.selected).map(seat => seat.number);
+// Function to handle teacher login
+function loginTeacher(event) {
+    event.preventDefault(); // Prevent form submission
+    const passwordInput = document.getElementById('password').value;
     
-    if (bookedSeatsArray.length > 0) {
-        movieData[currentMovie].bookedSeats.push(...bookedSeatsArray);
-        elements.bookedMovie.innerText = `Movie ${currentMovie}`;
-        elements.bookedTheater.innerText = 'Theater Name';  // Replace with actual theater name
-        elements.bookedDate.innerText = 'Date Selected';  // Replace with actual date
-        elements.bookedTime.innerText = 'Time Selected';  // Replace with actual time
-        elements.bookedSeats.innerText = bookedSeatsArray.join(', ');
-        elements.bookedTotalPrice.innerText = selectedSeats * totalPrice;
-        elements.bookedDetails.style.display = 'block';
-
-        // Add to booking list
-        elements.bookingList.push({
-            movie: elements.bookedMovie.innerText,
-            theater: elements.bookedTheater.innerText,
-            date: elements.bookedDate.innerText,
-            time: elements.bookedTime.innerText,
-            seats: elements.bookedSeats.innerText,
-            totalPrice: elements.bookedTotalPrice.innerText
-        });
-
-        console.log('Booking List:', elements.bookingList);
+    // Check if the entered password is correct
+    if (passwordInput === '9014') {
+        isTeacherLoggedIn = true; // Set login status
+        document.getElementById('upload-section').style.display = 'block'; // Show upload section
+        document.getElementById('login-section').style.display = 'none'; // Hide login section
+        loadCourses(); // Load courses to see existing uploads
+    } else {
+        alert('Incorrect password. Please try again.'); // Alert on incorrect password
     }
 }
 
-// Example of selecting a seat
-selectSeat(1); // Simulate selecting seat 1
-selectSeat(2); // Simulate selecting seat 2
-confirmBooking(); // Simulate confirming the booking
+// Function to load courses from backend
+function loadCourses() {
+    fetch('http://localhost:3000/courses')
+        .then(response => response.json())
+        .then(data => {
+            Object.assign(courseFiles, data); // Update courseFiles object with fetched data
+            displayUploadedFiles(); // Display uploaded files
+        })
+        .catch(error => console.error('Error loading courses:', error));
+}
+
+// Function to open course modal
+function openCourseModal(courseName) {
+    document.getElementById('modal-title').innerText = courseName;
+    document.getElementById('modal-description').innerText = `Details about ${courseName}`;
+    
+    // Populate course materials
+    const materialsList = document.getElementById('course-materials');
+    materialsList.innerHTML = ''; // Clear previous items
+
+    // Check if there are files for the selected course
+    if (courseFiles[courseName] && courseFiles[courseName].length > 0) {
+        courseFiles[courseName].forEach((file) => {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                ${file.name} 
+                <a href="${file.url}" download>Download</a>
+                <button onclick="deleteFile('${courseName}', '${file.name}')">Delete</button>
+            `;
+            materialsList.appendChild(listItem);
+        });
+    } else {
+        materialsList.innerHTML = '<li>No materials uploaded yet.</li>';
+    }
+
+    document.getElementById('course-modal').style.display = 'block';
+}
+
+// Function to close course modal
+function closeCourseModal() {
+    document.getElementById('course-modal').style.display = 'none';
+}
+
+// Function to handle file upload
+function uploadFile(event) {
+    event.preventDefault(); // Prevent form submission
+    const fileInput = document.getElementById('file-input');
+    const courseName = document.getElementById('course-name').value;
+
+    const formData = new FormData(); // Create a FormData object
+    formData.append('file', fileInput.files[0]); // Append the file
+    formData.append('courseName', courseName); // Append course name
+
+    // Make AJAX request to upload the file
+    fetch('http://localhost:3000/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data.message);
+        loadCourses(); // Reload courses to see the new upload
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Function to delete a file
+function deleteFile(courseName, fileName) {
+    fetch('http://localhost:3000/delete', {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ courseName, fileName }) // Send course name and file name
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data.message);
+        loadCourses(); // Reload courses to see updated file list
+    })
+    .catch(error => console.error('Error deleting file:', error));
+}
+
+// Function to display uploaded files
+function displayUploadedFiles() {
+    const uploadedFilesDiv = document.getElementById('uploaded-files');
+    uploadedFilesDiv.innerHTML = ''; // Clear previous content
+
+    // Iterate through the courseFiles object and display files
+    for (const courseName in courseFiles) {
+        if (courseFiles.hasOwnProperty(courseName)) {
+            courseFiles[courseName].forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.innerText = `Uploaded "${file.name}" to "${courseName}"`;
+                uploadedFilesDiv.appendChild(fileItem);
+            });
+        }
+    }
+}
