@@ -3,88 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Ticket Booking</title>
+    <title>LMS - Course List</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Add some basic styling for the modal and course list */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <h1>Book Your Movie Tickets</h1>
+        <h1>Learning Management System</h1>
     </header>
-
-    <section class="movie-list">
-        <h2>Available Movies</h2>
-        <div class="movies">
-            <div class="movie" data-id="1" data-price="150">
-                <img src="d2.jpg" alt="DEVARA">
-                <p>DEVARA</p>
-            </div>
-            <div class="movie" data-id="2" data-price="200">
-                <img src="s1.jpg" alt="SWAG">
-                <p>SWAG</p>
-            </div>
-            <div class="movie" data-id="3" data-price="250">
-                <img src="g1.jpg" alt="GOAT">
-                <p>GOAT</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="booking-section" id="bookingSection">
-        <h2>Book Your Seats</h2>
-
-        <select id="theaterName" class="theater-input">
-            <option value="">Select Theater</option>
-            <option value="CineWorld">CineWorld</option>
-            <option value="PVR Cinemas">PVR Cinemas</option>
-            <option value="Inox Movies">Inox Movies</option>
-            <option value="Big Cinemas">Big Cinemas</option>
-            <option value="Fun Cinemas">Fun Cinemas</option>
-            <option value="Galaxy Cinemas">Galaxy Cinemas</option>
-            <option value="Cinepolis">Cinepolis</option>
-            <option value="MovieMax">MovieMax</option>
-            <option value="Raj Mandir">Raj Mandir</option>
-            <option value="Satyam Cinemas">Satyam Cinemas</option>
-        </select>
-
-        <div class="date-time-selection">
-            <select id="dateSelection">
-                <option value="">Select Date</option>
-                <option value="2024-10-10">October 10, 2024</option>
-                <option value="2024-10-11">October 11, 2024</option>
-                <option value="2024-10-12">October 12, 2024</option>
-            </select>
-            <select id="timeSelection">
-                <option value="">Select Time</option>
-                <option value="10:00 AM">10:00 AM</option>
-                <option value="1:00 PM">1:00 PM</option>
-                <option value="4:00 PM">4:00 PM</option>
-                <option value="7:00 PM">7:00 PM</option>
-            </select>
+    <main>
+        <div id="login-section">
+            <h2>Teacher Login</h2>
+            <form id="login-form" onsubmit="loginTeacher(event)">
+                <input type="password" id="password" placeholder="Enter password" required>
+                <button type="submit">Login as Teacher</button>
+            </form>
         </div>
 
-        <div class="seat-selection" id="seatSelection"></div>
-        <div class="details">
-            <p>Total Seats: <span id="seatCount">0</span></p>
-            <p>Total Price: ₹<span id="totalPrice">0</span></p>
+        <h2>Available Courses</h2>
+        <div id="course-list">
+            <div class="course" onclick="openCourseModal('Linux Fundamentals');">
+                <h3>Linux Fundamentals</h3>
+                <p>A beginner's guide to Linux.</p>
+            </div>
+            <div class="course" onclick="openCourseModal('Data Structures and Algorithms');">
+                <h3>Data Structures and Algorithms</h3>
+                <p>Learn about essential data structures.</p>
+            </div>
+            <div class="course" onclick="openCourseModal('Operating Systems');">
+                <h3>Operating Systems</h3>
+                <p>In-depth study of operating systems.</p>
+            </div>
+            <div class="course" onclick="openCourseModal('Artificial Intelligence and Machine Learning');">
+                <h3>Artificial Intelligence and Machine Learning</h3>
+                <p>Introduction to AI concepts.</p>
+            </div>
         </div>
-        <button class="confirm-button" id="confirmButton">Confirm Booking</button>
-    </section>
 
-    <div class="booked-details" id="bookedDetails">
-        <h3>Your Booking Details:</h3>
-        <p>Movie: <span id="bookedMovie"></span></p>
-        <p>Theater: <span id="bookedTheater"></span></p>
-        <p>Date: <span id="bookedDate"></span></p>
-        <p>Time: <span id="bookedTime"></span></p>
-        <p>Seats: <span id="bookedSeats"></span></p>
-        <p>Total Price: ₹<span id="bookedTotalPrice"></span></p>
+        <div id="upload-section" style="display: none;">
+            <h2>Upload Course Materials</h2>
+            <form id="upload-form" onsubmit="uploadFile(event)">
+                <input type="file" id="file-input" required>
+                <input type="text" id="course-name" placeholder="Course Name" required>
+                <button type="submit">Upload File</button>
+            </form>
+        </div>
+
+        <h2>Uploaded Files</h2>
+        <div id="uploaded-files"></div>
+    </main>
+    <div id="course-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCourseModal()">&times;</span>
+            <h2 id="modal-title"></h2>
+            <p id="modal-description"></p>
+            <h3>Course Materials:</h3>
+            <ul id="course-materials"></ul>
+            <button onclick="closeCourseModal()">Back to Course List</button>
+        </div>
     </div>
+    <script>
+        const courseFiles = {}; // Object to store files associated with courses
+        let isTeacherLoggedIn = false; // Flag to check if the teacher is logged in
 
-    <div class="my-bookings" id="myBookings">
-        <h3>My Bookings</h3>
-        <div id="bookingList"></div>
-    </div>
+        function loginTeacher(event) {
+            event.preventDefault(); // Prevent form submission
+            const passwordInput = document.getElementById('password').value;
 
-    <script src="script.js"></script>
+            // Check if the entered password is correct
+            if (passwordInput === '9014') {
+                isTeacherLoggedIn = true; // Set login status
+                document.getElementById('upload-section').style.display = 'block'; // Show upload section
+                document.getElementById('login-section').style.display = 'none'; // Hide login section
+            } else {
+                alert('Incorrect password. Please try again.'); // Alert on incorrect password
+            }
+        }
+
+        function openCourseModal(courseName) {
+            document.getElementById('modal-title').innerText = courseName;
+            document.getElementById('modal-description').innerText = `Details about ${courseName}`;
+
+            // Populate course materials
+            const materialsList = document.getElementById('course-materials');
+            materialsList.innerHTML = ''; // Clear previous items
+
+            // Check if there are files for the selected course
+            if (courseFiles[courseName] && courseFiles[courseName].length > 0) {
+                courseFiles[courseName].forEach((file, index) => {
+                    const listItem = document.createElement('li');
+                    listItem.innerHTML = `
+                        ${file.name} 
+                        <a href="${file.url}" download>Download</a>
+                        <button onclick="deleteFile('${courseName}', ${index})">Delete</button>
+                    `;
+                    materialsList.appendChild(listItem);
+                });
+            } else {
+                materialsList.innerHTML = '<li>No materials uploaded yet.</li>';
+            }
+
+            document.getElementById('course-modal').style.display = 'block';
+        }
+
+        function closeCourseModal() {
+            document.getElementById('course-modal').style.display = 'none';
+        }
+
+        // Handle file upload
+        function uploadFile(event) {
+            event.preventDefault(); // Prevent form submission
+            const fileInput = document.getElementById('file-input');
+            const courseName = document.getElementById('course-name').value;
+
+            // Ensure the course exists in the courseFiles object
+            if (!courseFiles[courseName]) {
+                courseFiles[courseName] = []; // Initialize an empty array for the course if it doesn't exist
+            }
+
+            const file = fileInput.files[0]; // Get the uploaded file
+            const fileUrl = URL.createObjectURL(file); // Create a URL for the file
+            courseFiles[courseName].push({ name: file.name, url: fileUrl }); // Store the file info
+
+            // Display uploaded files in the main section
+            displayUploadedFiles(courseName, file);
+
+            // Reset the form
+            document.getElementById('upload-form').reset();
+        }
+
+        function displayUploadedFiles(courseName, file) {
+            const uploadedFilesDiv = document.getElementById('uploaded-files');
+            const fileItem = document.createElement('div');
+            fileItem.innerText = `Uploaded "${file.name}" to "${courseName}"`;
+            uploadedFilesDiv.appendChild(fileItem);
+        }
+
+        function deleteFile(courseName, index) {
+            // Remove the file from the courseFiles object
+            if (courseFiles[courseName] && courseFiles[courseName].length > index) {
+                courseFiles[courseName].splice(index, 1); // Remove the file from the array
+            }
+            
+            // Update the displayed course materials
+            openCourseModal(courseName); // Refresh the modal to reflect changes
+        }
+    </script>
 </body>
 </html>
