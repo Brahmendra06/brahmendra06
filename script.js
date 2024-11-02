@@ -1,4 +1,4 @@
-const courseFiles = {}; // Object to store files associated with courses
+const courseFiles = JSON.parse(localStorage.getItem('courseFiles')) || {}; // Load files from localStorage
 let isTeacherLoggedIn = false; // Flag to check if the teacher is logged in
 
 // Function to handle teacher login
@@ -11,6 +11,7 @@ function loginTeacher(event) {
         isTeacherLoggedIn = true; // Set login status
         document.getElementById('upload-section').style.display = 'block'; // Show upload section
         document.getElementById('login-section').style.display = 'none'; // Hide login section
+        displayUploadedFiles(); // Show uploaded files
     } else {
         alert('Incorrect password. Please try again.'); // Alert on incorrect password
     }
@@ -58,6 +59,9 @@ function uploadFile(event) {
     const fileUrl = URL.createObjectURL(file); // Create a URL for the file
     courseFiles[courseName].push({ name: file.name, url: fileUrl }); // Store the file info
 
+    // Save updated courseFiles to localStorage
+    localStorage.setItem('courseFiles', JSON.stringify(courseFiles));
+
     // Display uploaded files in the main section
     displayUploadedFiles(courseName, file);
 
@@ -66,19 +70,37 @@ function uploadFile(event) {
 }
 
 // Function to display uploaded files
-function displayUploadedFiles(courseName, file) {
+function displayUploadedFiles() {
     const uploadedFilesDiv = document.getElementById('uploaded-files');
-    const fileItem = document.createElement('div');
-    fileItem.innerText = `Uploaded "${file.name}" to "${courseName}"`;
-    uploadedFilesDiv.appendChild(fileItem);
+    uploadedFilesDiv.innerHTML = ''; // Clear previous content
+
+    // Iterate through the courseFiles object and display files
+    for (const courseName in courseFiles) {
+        if (courseFiles.hasOwnProperty(courseName)) {
+            courseFiles[courseName].forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.innerText = `Uploaded "${file.name}" to "${courseName}"`;
+                uploadedFilesDiv.appendChild(fileItem);
+            });
+        }
+    }
 }
 
+// Function to delete a file
 function deleteFile(courseName, index) {
     // Remove the file from the courseFiles object
     if (courseFiles[courseName] && courseFiles[courseName].length > index) {
         courseFiles[courseName].splice(index, 1); // Remove the file from the array
+
+        // Update localStorage after deletion
+        localStorage.setItem('courseFiles', JSON.stringify(courseFiles));
     }
     
     // Update the displayed course materials
     openCourseModal(courseName); // Refresh the modal to reflect changes
+}
+
+// Function to close course modal
+function closeCourseModal() {
+    document.getElementById('course-modal').style.display = 'none';
 }
