@@ -3,187 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LMS - Course List</title>
+    <title>L-T-P-S Calculator - KL Attendance Calculator</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        /* Add some basic styling for the modal and course list */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgb(0,0,0);
-            background-color: rgba(0,0,0,0.4);
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-    </style>
 </head>
 <body>
-    <header>
-        <h1>Learning Management System</h1>
-    </header>
-    <main>
-        <div id="login-section">
-            <h2>Teacher Login</h2>
-            <form id="login-form" onsubmit="loginTeacher(event)">
-                <input type="password" id="password" placeholder="Enter password" required>
-                <button type="submit">Login as Teacher</button>
-            </form>
-        </div>
+    <div class="container">
+        <h2><strong>L-T-P-S Attendance Calculator</strong></h2>
+        <p><strong>Input attendance details for overall calculation.</strong></p>
 
-        <h2>Available Courses</h2>
-        <div id="course-list">
-            <div class="course" onclick="openCourseModal('Linux Fundamentals');">
-                <h3>Linux Fundamentals</h3>
-                <p>A beginner's guide to Linux.</p>
-            </div>
-            <div class="course" onclick="openCourseModal('Data Structures and Algorithms');">
-                <h3>Data Structures and Algorithms</h3>
-                <p>Learn about essential data structures.</p>
-            </div>
-            <div class="course" onclick="openCourseModal('Operating Systems');">
-                <h3>Operating Systems</h3>
-                <p>In-depth study of operating systems.</p>
-            </div>
-            <div class="course" onclick="openCourseModal('Artificial Intelligence and Machine Learning');">
-                <h3>Artificial Intelligence and Machine Learning</h3>
-                <p>Introduction to AI concepts.</p>
-            </div>
-        </div>
+        <!-- Input Fields -->
+        <label for="lectureAttendance"><strong>Lecture Attendance %:</strong></label>
+        <input type="number" id="lectureAttendance" placeholder="Enter attendance for lectures" min="0" max="100">
+        
+        <label for="tutorialAttendance"><strong>Tutorial Attendance %:</strong></label>
+        <input type="number" id="tutorialAttendance" placeholder="Enter attendance for tutorials" min="0" max="100">
 
-        <div id="upload-section" style="display: none;">
-            <h2>Upload Course Materials</h2>
-            <form id="upload-form" onsubmit="uploadFile(event)">
-                <input type="file" id="file-input" required>
-                <input type="text" id="course-name" placeholder="Course Name" required>
-                <button type="submit">Upload File</button>
-            </form>
-        </div>
+        <label for="practicalAttendance"><strong>Practical Attendance %:</strong></label>
+        <input type="number" id="practicalAttendance" placeholder="Enter attendance for practicals" min="0" max="100">
 
-        <h2>Uploaded Files</h2>
-        <div id="uploaded-files"></div>
-    </main>
-    <div id="course-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeCourseModal()">&times;</span>
-            <h2 id="modal-title"></h2>
-            <p id="modal-description"></p>
-            <h3>Course Materials:</h3>
-            <ul id="course-materials"></ul>
-            <button onclick="closeCourseModal()">Back to Course List</button>
+        <label for="seminarAttendance"><strong>Seminar Attendance %:</strong></label>
+        <input type="number" id="seminarAttendance" placeholder="Enter attendance for seminars" min="0" max="100">
+        
+        <!-- Buttons -->
+        <button class="calculate-btn" onclick="calculateAttendance()">Calculate Overall Attendance</button>
+        <button class="reset-btn" onclick="resetFields()">Reset Fields</button>
+        
+        <p id="result"></p>
+        <p id="message" class="success"></p>
+
+        <!-- GIFs for Attendance Feedback -->
+        <div class="gif-container">
+            <img id="belowGif" src="https://media2.giphy.com/media/ptntNCl7nwQqk/giphy.gif" alt="Below 85% GIF">
+            <img id="aboveGif" src="https://media2.giphy.com/media/KTCh8fg6KgoLu/giphy.gif" alt="Above 85% GIF">
         </div>
     </div>
-    <script>
-        const courseFiles = {}; // Object to store files associated with courses
-        let isTeacherLoggedIn = false; // Flag to check if the teacher is logged in
 
-        function loginTeacher(event) {
-            event.preventDefault(); // Prevent form submission
-            const passwordInput = document.getElementById('password').value;
-
-            // Check if the entered password is correct
-            if (passwordInput === '9014') {
-                isTeacherLoggedIn = true; // Set login status
-                document.getElementById('upload-section').style.display = 'block'; // Show upload section
-                document.getElementById('login-section').style.display = 'none'; // Hide login section
-            } else {
-                alert('Incorrect password. Please try again.'); // Alert on incorrect password
-            }
-        }
-
-        function openCourseModal(courseName) {
-            document.getElementById('modal-title').innerText = courseName;
-            document.getElementById('modal-description').innerText = `Details about ${courseName}`;
-
-            // Populate course materials
-            const materialsList = document.getElementById('course-materials');
-            materialsList.innerHTML = ''; // Clear previous items
-
-            // Check if there are files for the selected course
-            if (courseFiles[courseName] && courseFiles[courseName].length > 0) {
-                courseFiles[courseName].forEach((file, index) => {
-                    const listItem = document.createElement('li');
-                    listItem.innerHTML = `
-                        ${file.name} 
-                        <a href="${file.url}" download>Download</a>
-                        <button onclick="deleteFile('${courseName}', ${index})">Delete</button>
-                    `;
-                    materialsList.appendChild(listItem);
-                });
-            } else {
-                materialsList.innerHTML = '<li>No materials uploaded yet.</li>';
-            }
-
-            document.getElementById('course-modal').style.display = 'block';
-        }
-
-        function closeCourseModal() {
-            document.getElementById('course-modal').style.display = 'none';
-        }
-
-        // Handle file upload
-        function uploadFile(event) {
-            event.preventDefault(); // Prevent form submission
-            const fileInput = document.getElementById('file-input');
-            const courseName = document.getElementById('course-name').value;
-
-            // Ensure the course exists in the courseFiles object
-            if (!courseFiles[courseName]) {
-                courseFiles[courseName] = []; // Initialize an empty array for the course if it doesn't exist
-            }
-
-            const file = fileInput.files[0]; // Get the uploaded file
-            const fileUrl = URL.createObjectURL(file); // Create a URL for the file
-            courseFiles[courseName].push({ name: file.name, url: fileUrl }); // Store the file info
-
-            // Display uploaded files in the main section
-            displayUploadedFiles(courseName, file);
-
-            // Reset the form
-            document.getElementById('upload-form').reset();
-        }
-
-        function displayUploadedFiles(courseName, file) {
-            const uploadedFilesDiv = document.getElementById('uploaded-files');
-            const fileItem = document.createElement('div');
-            fileItem.innerText = `Uploaded "${file.name}" to "${courseName}"`;
-            uploadedFilesDiv.appendChild(fileItem);
-        }
-
-        function deleteFile(courseName, index) {
-            // Remove the file from the courseFiles object
-            if (courseFiles[courseName] && courseFiles[courseName].length > index) {
-                courseFiles[courseName].splice(index, 1); // Remove the file from the array
-            }
-            
-            // Update the displayed course materials
-            openCourseModal(courseName); // Refresh the modal to reflect changes
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
