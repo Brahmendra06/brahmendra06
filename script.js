@@ -49,4 +49,3 @@ function resetFields() {
     document.getElementById("aboveGif").style.display = "none"; 
     document.body.style.backgroundColor = "#ffffff"; // Reset background color to white
 }
-
